@@ -29,6 +29,26 @@ word w_read (address adr){
     return w & 0xFFFF;
 } 
 
+void load_data(){
+    FILE * fin  = fopen("data.txt", "r");
+    unsigned int n, i, adr, val;
+    while(2 == fscanf(fin, "%x%x", &adr, &n)) {
+        for (i = 0; i < n; i++){
+            fscanf(fin, "%x", &val);
+            b_write(adr + i, val);
+        }
+    }
+    fclose(fin);
+}
+
+void mem_dump(address adr, int size){
+    word w;
+    for( ; size > 0; size -= 2, adr += 2){
+        w = w_read(adr);
+        printf("%06o: %06o %04x\n", adr, w, w);
+    }
+}
+
 void test_mem()
 {
     address a;
@@ -39,7 +59,7 @@ void test_mem()
     b0 = 0x0a;
     b_write(2, b0);
     bres = b_read(2);
-    printf("b0=%02hhx  bres=%02hhx\n", b0, bres);
+    printf("b0=%02x  bres=%02x\n", b0, bres);
     assert(b0 == bres);
 
     //два байта -> слово
@@ -50,7 +70,7 @@ void test_mem()
     b_write(a, b0);
     b_write(a + 1, b1);
     wres = w_read(a);
-    printf("wres=%04hx b1 bo=%02hhx %02hhx\n", wres, b1, b0);
+    printf("wres=%04hx b1 bo=%02x %02x\n", wres, b1, b0);
     assert(w == wres);
 
     //пишем и читаем слово
@@ -67,13 +87,16 @@ void test_mem()
     w_write(a, w);
     b0 = b_read(a);
     b1 = b_read(a + 1);
-    printf("w=%04hx   b1 bo=%02hhx %02hhx\n", w, b1, b0);
-
-    return 0;
+    printf("w=%04hx   b1 bo=%02x %02x\n", w, b1, b0);
 }
 
 int main()
 {
-    test_mem();
+
+    load_data();
+    mem_dump(0x40, 20);
+    printf("\n");
+    mem_dump(0x200, 0x26);
+
     return 0;
 }
