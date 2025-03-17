@@ -1,7 +1,7 @@
 #include<stdio.h>
 
 int main(){
-    printf("Hy");
+    printf("%d", 0 | 0);
 
     return 0;
 }
