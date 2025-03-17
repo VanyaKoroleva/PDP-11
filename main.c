@@ -29,26 +29,6 @@ word w_read (address adr){
     return w & 0xFFFF;
 } 
 
-void load_data(){
-    FILE * fin  = fopen("data.txt", "r");
-    unsigned int n, i, adr, val;
-    while(2 == fscanf(fin, "%x%x", &adr, &n)) {
-        for (i = 0; i < n; i++){
-            fscanf(fin, "%x", &val);
-            b_write(adr + i, val);
-        }
-    }
-    fclose(fin);
-}
-
-void mem_dump(address adr, int size){
-    word w;
-    for( ; size > 0; size -= 2, adr += 2){
-        w = w_read(adr);
-        printf("%06o: %06o %04x\n", adr, w, w);
-    }
-}
-
 void test_mem()
 {
     address a;
@@ -90,13 +70,40 @@ void test_mem()
     printf("w=%04hx   b1 bo=%02x %02x\n", w, b1, b0);
 }
 
+void load_data(){
+    FILE * fin  = fopen("data.txt", "r");
+    unsigned int n, i, adr, val;
+    while(2 == fscanf(fin, "%x%x", &adr, &n)) {
+        for (i = 0; i < n; i++){
+            fscanf(fin, "%x", &val);
+            b_write(adr + i, val);
+        }
+    }
+    fclose(fin);
+}
+
+void mem_dump(address adr, int size){
+    word w;
+    for( ; size > 0; size -= 2, adr += 2){
+        w = w_read(adr);
+        printf("%06o: %06o %04x\n", adr, w, w);
+    }
+}
+
+// void load_file(const char * filename){
+//     load_data();
+// }
+
+void test_mem();
+
 int main()
 {
-
-    load_data();
-    mem_dump(0x40, 20);
-    printf("\n");
-    mem_dump(0x200, 0x26);
+    
+    test_mem();
+    // load_file("data.txt");
+    // mem_dump(0x40, 20);
+    // printf("\n");
+    // mem_dump(0x200, 0x26);
 
     return 0;
 }
