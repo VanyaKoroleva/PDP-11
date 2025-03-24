@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef unsigned char byte;
 typedef unsigned short int word;
@@ -70,8 +72,7 @@ void test_mem()
     printf("w=%04hx   b1 bo=%02x %02x\n", w, b1, b0);
 }
 
-void load_data(){
-    FILE * fin  = fopen("data.txt", "r");
+void load_data(FILE * fin){
     unsigned int n, i, adr, val;
     while(2 == fscanf(fin, "%x%x", &adr, &n)) {
         for (i = 0; i < n; i++){
@@ -79,7 +80,6 @@ void load_data(){
             b_write(adr + i, val);
         }
     }
-    fclose(fin);
 }
 
 void mem_dump(address adr, int size){
@@ -90,20 +90,56 @@ void mem_dump(address adr, int size){
     }
 }
 
-// void load_file(const char * filename){
-//     load_data();
-// }
+void load_file(const char * filename){
+    FILE * fin = fopen(filename, "r");
+    if (fin == NULL) {
+        perror(filename);
+        exit(errno);
+    }
+    // char str[1001];
+    // fscanf(fin, "%s", str);
+    // printf("%s\n", str);
+    load_data(fin);
+    fclose(fin);
+}
 
-void test_mem();
+void print_usage(const char *program_name) {
+    printf("Использование: %s [-t] <путь_к_файлу>\n", program_name);
+    printf("  -t          Включить режим трассировки\n");
+    printf("  <путь_к_файлу>  Путь к файлу с данными (если не указан, данные читаются из stdin)\n");
+}
 
-int main()
+int main(int argc, char *argv[])
 {
-    
-    test_mem();
-    // load_file("data.txt");
-    // mem_dump(0x40, 20);
-    // printf("\n");
-    // mem_dump(0x200, 0x26);
+    FILE *file = stdin;
+    char *file_path = NULL;
 
+    if (argc > 1) {
+        if (argc == 3 && strcmp(argv[1], "-t") == 0) {
+            file_path = argv[2];
+        } 
+        else if (argc == 2) {
+            file_path = argv[1];
+        } 
+        else {
+            print_usage(argv[0]);
+            return 1;
+        }
+
+        if (file_path) {
+            file = fopen(file_path, "r");
+            if (file == NULL) {
+                perror(file_path);
+                exit(errno);
+            }
+        }
+    }
+
+    load_data(file);
+    mem_dump(0x40, 20);
+    printf("\n");
+    mem_dump(0x200, 0x26);
+    
+    fclose(file);
     return 0;
 }
