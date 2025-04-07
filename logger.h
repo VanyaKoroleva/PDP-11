@@ -1,6 +1,6 @@
 
 typedef enum {
-    ERROR,
+    ERROR = 0,
     WARNING,
     INFO,
     TRACE,
@@ -8,7 +8,7 @@ typedef enum {
 } LogLevel;
 
 LogLevel set_log_level(LogLevel level);
-void log(LogLevel level, const char *format, ...);
+void logger(LogLevel level, const char *format, ...);
 void error(const char *format, ...);
 void warning(const char *format, ...);
 void info(const char *format, ...);

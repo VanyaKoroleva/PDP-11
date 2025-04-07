@@ -10,7 +10,28 @@ LogLevel set_log_level(LogLevel level) {
     return old_log_level;
 }
 
-void log(LogLevel level, const char *format, ...) {
+void log_message(LogLevel level, const char *format, ...) {
+    if (level <= log_level) {
+        va_list args;
+        va_start(args, format);
+        
+        switch (level) {
+            case ERROR:   printf("ERROR: "); break;
+            case WARNING: printf("WARNING: "); break;
+            case INFO:    printf("INFO: "); break;
+            case TRACE:   printf("TRACE: "); break;
+            case DEBUG:   printf("DEBUG: "); break;
+            default:      printf("UNKNOWN: "); break;
+        }
+
+        vprintf(format, args);
+        printf("\n");
+
+        va_end(args);
+    }
+}
+
+void logger(LogLevel level, const char *format, ...) {
     if (level <= log_level) {
         va_list args;
         va_start(args, format);
@@ -22,34 +43,34 @@ void log(LogLevel level, const char *format, ...) {
 void error(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    log(ERROR, format, args);
+    logger(ERROR, format, args);
     va_end(args);
 }
 
 void warning(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    log(WARNING, format, args);
+    logger(WARNING, format, args);
     va_end(args);
 }
 
 void info(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    log(INFO, format, args);
+    logger(INFO, format, args);
     va_end(args);
 }
 
 void trace(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    log(TRACE, format, args);
+    logger(TRACE, format, args);
     va_end(args);
 }
 
 void debug(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    log(DEBUG, format, args);
+    logger(DEBUG, format, args);
     va_end(args);
 }
