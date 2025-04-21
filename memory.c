@@ -44,16 +44,22 @@ void load_data(FILE * fin){
 }
 
 void load_file(const char * filename){
-    FILE * fin = fopen(filename, "r");
-    if (fin == NULL) {
-        perror(filename);
-        exit(errno);
+    FILE * fin;
+    if (filename == NULL) 
+        fin = stdin;
+    else {
+        fin = fopen(filename, "r");
+        if (fin == NULL) {
+            perror(filename);
+            exit(errno);
+        }
     }
     // char str[1001];
     // fscanf(fin, "%s", str);
     // printf("%s\n", str);
     load_data(fin);
-    fclose(fin);
+    if (fin != stdin)
+        fclose(fin);
 }
 
 void test_mem()
