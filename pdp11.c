@@ -6,7 +6,6 @@
 #include "memory.h"
 #include "logger.h"
 
-word reg[8];
 #define pc reg[7]
 
 typedef struct {
@@ -14,6 +13,7 @@ typedef struct {
     word opcode;
     char * name;
     void (*do_command)(void);
+    char params;
 } Command;
 
 typedef struct {
@@ -23,6 +23,14 @@ typedef struct {
 
 Arg ss, dd;
 
+enum command_params {
+    NO_PARAMS = 0,
+    HAS_DD    = 1,
+    HAS_SS    = 2,
+    HAS_R     = 4,
+    HAS_NN    = 8
+};
+
 void print_usage(const char *program_name) {
     printf("Использование: %s [-t] <путь_к_файлу>\n", program_name);
     printf("  -t          Включить режим трассировки\n");
@@ -30,6 +38,7 @@ void print_usage(const char *program_name) {
 }
  
 void reg_dump(){
+    logger(TRACE, "\n");
     int i;
     for (i = 0; i < 8; i ++)
         logger(TRACE, "r%d:%o ", i, reg[i]);
@@ -89,30 +98,55 @@ Arg get_mr(word w)
     return res;
 }
 
+Command command[] = {
+    {0170000, 0060000, "add", do_add, HAS_DD | HAS_SS},
+    {0170000, 0010000, "mov", do_mov, HAS_DD | HAS_SS},
+    {0177777, 0000000, "halt", do_halt, NO_PARAMS},
+    {0000000, 0000000, "unknown", do_nothing, NO_PARAMS} // LAST
+};
+
+word read_cmd() {
+    word w;
+    logger(TRACE, "%06o ", pc);
+    w = w_read(pc);
+    pc += 2;
+    logger(TRACE, "%06o : ", w);
+    return w;
+}
+
+int r, nn;
+
+Command parse_cmd(word cmd) {
+    for (int i = 0; ; i++) {
+        if ((cmd & command[i].mask) == command[i].opcode) {
+            logger(TRACE, "%s ", command[i].name);
+            if (command[i].params & HAS_SS) {
+                ss = get_mr(cmd >> 6);
+            } 
+            if (command[i].params & HAS_DD) {
+                dd = get_mr(cmd);
+            }
+            if (command[i].params & HAS_R) {
+                r = (cmd >> 6) & 7;
+                logger(TRACE, "R%d ", r);
+            } 
+            if (command[i].params & HAS_NN) {
+                nn = cmd & 077;
+                logger(TRACE, "#%o ", pc - (nn << 1));
+            }
+            return command[i];
+        }
+    }
+}
 
 void run()
 {
     pc = 01000;
-    unsigned int i;
-    word w; 
-    Command command[] = {
-        {0170000, 0060000, "add", do_add},
-        {0170000, 0010000, "mov", do_mov},
-        {0177777, 0000000, "halt", do_halt},
-        {0000000, 0000000, "unknown", do_nothing}
-    };
-
+    Command cmd;
     while(1) {
-        w = w_read(pc);
-        printf( "%06o %06o: ", pc, w);
-        pc += 2;
-        for(i = 0; ; i ++){
-            if ((w & command[i].mask) == command[i].opcode) {
-                printf("%s \n", command[i].name);
-                command[i].do_command();
-                break;
-            }
-        }
+        cmd = parse_cmd(read_cmd()); // читаем слово и разбираем команду
+        cmd.do_command();            // выполняем команду
+        logger(TRACE, "\n");
     }
 }
 

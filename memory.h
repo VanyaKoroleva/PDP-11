@@ -8,6 +8,7 @@ typedef word address;
 
 #define MEMSIZE 64*1024
 extern byte mem[MEMSIZE];
+extern word reg[8];
 
 void b_write(address adr, byte val);
 byte b_read(address adr);

@@ -3,26 +3,38 @@
 #include <stdlib.h>
 
 byte mem[MEMSIZE];
+word reg[8];
 
 void b_write (address adr, byte val){
-    mem[adr] = val;
+    if (adr < 8){
+        reg[adr] = (val & 0x100) == 0x100 ? val | 0xFF : val & 0xF;
+    }
+    else {
+        mem[adr] = val;
+    }
 }
 
 byte b_read (address adr){
-    return mem[adr];
+    return adr < 8 ? reg[adr] & 0xFF : mem[adr];
 }
 
 void w_write (address adr, word val){
-    assert(adr % 2 == 0);
-    mem[adr + 1] = (byte)(val >> 8);
-    mem[adr] = (byte)val;
+    if (adr < 8) {
+        reg[adr] = val;
+    } else {
+        mem[adr] = val & 255;
+        mem[adr + 1] = val >> 8;
+    }
 }
 
 word w_read (address adr){
-    assert(adr % 2 == 0);
-    word w = mem[adr+1] << 8;
-    w = w | mem[adr];
-    return w & 0xFFFF;
+    if (adr < 8) {
+        return reg[adr];
+    } else {
+        word w = mem[adr + 1] << 8;
+        w |= mem[adr] & 255;
+        return w & 0xFFFF;
+    }
 } 
 
 void mem_dump(address adr, int size){
