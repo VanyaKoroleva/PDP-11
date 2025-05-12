@@ -4,6 +4,7 @@
 
 typedef unsigned char byte;
 typedef unsigned short int word;
+typedef unsigned int dword;
 typedef word address;
 
 #define MEMSIZE 64*1024

@@ -5,17 +5,28 @@
 byte mem[MEMSIZE];
 word reg[8];
 
+#define OSTAT 0177564
+#define ODATA 0177566
+
 void b_write (address adr, byte val){
     if (adr < 8){
-        reg[adr] = (val & 0x100) == 0x100 ? val | 0xFF : val & 0xF;
+        if(val >> 7 == 0)
+        {
+            reg[adr] = val;
+            return;
+        }
+        reg[adr] =  0xFF00 | val;
     }
     else {
         mem[adr] = val;
+        if (adr == ODATA) {
+            fputc(val, stderr);
+        }
     }
 }
 
 byte b_read (address adr){
-    return adr < 8 ? reg[adr] & 0xFF : mem[adr];
+    return mem[adr];
 }
 
 void w_write (address adr, word val){
@@ -66,9 +77,6 @@ void load_file(const char * filename){
             exit(errno);
         }
     }
-    // char str[1001];
-    // fscanf(fin, "%s", str);
-    // printf("%s\n", str);
     load_data(fin);
     if (fin != stdin)
         fclose(fin);
